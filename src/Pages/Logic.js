@@ -1,67 +1,82 @@
 import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const Logic = () => {
-    let { id } = useParams();
-    let grid;
-    const difficulty = {
-        easy: [10, 10, 10],
-        medium: [16, 16, 10],
-        hard: [16, 30, 99],
-    };
+	const [grid, setGrid] = useState([]);
+	const [showCell, setShowCell] = useState(false);
+	const emoji = ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
 
-    const makeGrid = (difficulty) => {
-        let a = [];
-        for (let i = 0; i < difficulty[0]; i++) {
-            let b = [];
-            for (let j = 0; j < difficulty[1]; j++) {
-                b.push([null, 0, 0]); // Change this line to create cells with [null, 0, 0] structure
-            }
-            a.push(b);
-        }
-        return a;
-    };
+	const { id } = useParams();
+	const difficulty = {
+		easy: [10, 10, 10],
+		medium: [16, 16, 10],
+		hard: [16, 30, 99],
+	};
 
-    const addMines = (difficulty, grid) => {
-        let x;
-        let y;
-        let coords = [];
-        for (let i = 0; i < difficulty[2]; i++) {
-            x = Math.floor(Math.random() * difficulty[0]);
-            y = Math.floor(Math.random() * difficulty[1]);
-            coords.push([x, y]);
-        }
+	const makeGrid = (difficulty) => {
+		return Array.from({ length: difficulty[0] }, () =>
+			Array.from({ length: difficulty[1] }, () => ["❌", "0️"])
+		);
+	};
 
-        coords.forEach(([x, y]) => {
-            grid[x][y][1] = 9;
-        });
+	const addMines = (difficulty, currentGrid) => {
+		let x;
+		let y;
+		let coords = [];
+		for (let i = 0; i < difficulty[2]; i++) {
+			x = Math.floor(Math.random() * difficulty[0]);
+			y = Math.floor(Math.random() * difficulty[1]);
+			coords.push([x, y]);
+		}
 
-        return grid;
-    };
+		coords.forEach(([x, y]) => {
+			currentGrid[x][y][1] = "💣";
+		});
 
-    const renderGrid = () => {
-        return (
-            <div>
-                {grid.map((row, rowIndex) => (
-                    <div key={rowIndex}>
-                        {row.map((cell, cellIndex) => (
-                            <span key={cellIndex}>{cell}</span>
-                        ))}
-                    </div>
-                ))}
-            </div>
-        );
-    };
+		return currentGrid;
+	};
 
-    if (difficulty[id]) {
-        let currentDifficulty = difficulty[id];
+	const handleClick = (cell) => {
+		let celly = parseInt(cell[1], 10);
+		if (Number.isInteger(celly)) {
+			const updatedGrid = [...grid];
+			cell[0] = emoji[celly];
+			setGrid(updatedGrid);
+		} else {
+			console.log("dead");
+		}
+	};
 
-        grid = makeGrid(currentDifficulty);
-        grid = addMines(currentDifficulty, grid);
+	const renderGrid = () => {
+		return (
+			<div className="mx-96 content-center overflow-hidden	">
+				{grid.map((row, rowIndex) => (
+					<div key={rowIndex} className="flex">
+						{row.map((cell, cellIndex) => (
+							<div
+								className=" bg-blue-400 border-spacing-2 border-neutral-500"
+								key={cellIndex}
+								onClick={() => handleClick(cell)}
+							>
+								<div className="">{cell[0] === "❌" ? cell[0] : cell[1]}</div>
+							</div>
+						))}
+					</div>
+				))}
+			</div>
+		);
+	};
 
-        return renderGrid();
-    }
+	useEffect(() => {
+		if (difficulty[id]) {
+			const currentDifficulty = difficulty[id];
+			const newGrid = makeGrid(currentDifficulty);
+			const gridWithMines = addMines(currentDifficulty, newGrid);
+			setGrid(gridWithMines);
+		}
+	}, [id]);
 
-    return <>pass {grid && <>{grid}</>}</>;
+	return <>{renderGrid()}</>;
 };
 
 export default Logic;
